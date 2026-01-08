@@ -12,6 +12,7 @@
 declare -gA CARGO
 CARGO[_PLUGIN_DIR]="${0:h}"
 CARGO[_FUNCTIONS]=""
+CARGO[_OLD_HOME]="${CARGO_HOME}"
 
 ############################################################################
 # Internal Support Functions
@@ -38,7 +39,7 @@ _cargo_remember_fn _cargo_remember_fn
 ############################################################################
 
 export CARGO_HOME="${CARGO_HOME:-${HOME}/.cargo}"
-path_append "${CARGO_HOME}/bin"
+path+=( "${CARGO_HOME}/bin" )
 
 function cargo_all_installed {
     local list=$(cargo install --list |grep -E "^[^ ]" | cut -d ' ' -f 1 | tr '\n' ':')
@@ -67,12 +68,14 @@ cargo_plugin_unload() {
         whence -w "${fn}" &> /dev/null && unfunction "${fn}"
     done
 
+    # Removing _PATH entries.
+    path=( "${path:#${CARGO_HOME}/bin}" )
+
+    # Reset global environment variables.
+    export CARGO_HOME="${CARGO[_OLD_HOME]}"
+
     # Remove the global data variable.
     unset CARGO
-
-    # Remove self from fpath.
-    # shellcheck disable=SC2296
-    fpath=("${(@)fpath:#${0:A:h}}")
 
     # Remove this function.
     unfunction "cargo_plugin_unload"

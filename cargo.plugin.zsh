@@ -1,8 +1,8 @@
 # -*- mode: sh; eval: (sh-set-shell "zsh") -*-
 #
-# @name cargo
-# @brief Simple environment setup for using `cargo` as a package manager.
-# @repository https://github.com/johnstonskj/zsh-cargo-plugin
+# @name: cargo
+# @brief: Simple environment setup for using `cargo` as a package manager.
+# @repository: https://github.com/johnstonskj/zsh-cargo-plugin
 #
 
 ############################################################################

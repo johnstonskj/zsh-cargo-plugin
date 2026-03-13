@@ -1,0 +1,30 @@
+# shellcheck shell=bash # -*- mode: sh; eval: (sh-set-shell "zsh") -*-
+
+#
+# @description
+#
+# A wrapper for the `cargo` command which will 
+#
+# @exitcode 0 Success.
+# @exitcode 1 Missing parameter.
+# @exitcode 2 Command 'pushd'/'popd' failed.
+# @exitcode 3 Cargo command failed.
+# @exitcode 4 Missing version in 'README.md' file.
+# @exitcode 5 Missing 'Cargo.toml' file.
+# 
+
+typeset fn_name="${0:t}"
+typeset command="${1}"; shift
+# shellcheck disable=SC2206
+typeset -a args=( $@ )
+
+# shellcheck disable=SC2068
+if ! cargo "${command}" ${args[@]}; then
+    typeset -i errno=$?
+    typeset message="cargo command '${command}' failed; args=(${args[*]}), errno=${errno}"
+    log_error "${fn_name}: ${message}"
+    echo "Error: ${message}"
+    return ${errno}
+else
+    return 0
+fi

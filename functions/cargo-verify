@@ -1,0 +1,34 @@
+# shellcheck shell=bash disable=SC2155 # -*- mode: sh; eval: (sh-set-shell "zsh") -*-
+
+typeset toolchain=$(rustup toolchain list |grep default | cut -d ' ' -f1)
+
+echo "# Verify workspace"
+echo
+
+echo "## Checking for unused dependencies"
+echo
+if [[ "${toolchain}" == nightly* ]]; then
+    echo "\`\`\`bash"
+    .cargo-checked udeps
+    echo "\`\`\`"
+    echo
+else
+    echo "_Cargo 'udeps' skipped for non-nightly toolchain._"
+    echo
+fi
+
+echo "## Checking for outdated dependencies"
+echo
+echo "\`\`\`bash"
+.cargo-checked outdated
+echo "\`\`\`"
+echo
+
+echo "## Run security audit"
+echo
+echo "\`\`\`bash"
+.cargo-checked audit
+echo "\`\`\`"
+
+return 0
+

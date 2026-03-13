@@ -1,0 +1,105 @@
+# shellcheck shell=bash # -*- mode: sh; eval: (sh-set-shell "zsh") -*-
+
+#
+# @description
+#
+# @exitcode 0 Success.
+# @exitcode 1 Missing parameter.
+# @exitcode 2 Command 'pushd'/'popd' failed.
+# @exitcode 3 Cargo command failed.
+# @exitcode 4 Missing version in 'README.md' file.
+# @exitcode 5 Missing 'Cargo.toml' file.
+# 
+
+if [[ "$1" == "" ]] ; then
+    echo "Error: a version message is required as first paramater"
+    return 1
+fi
+echo "# Publish crate"
+echo
+
+if ! pushd "$(git rev-parse --show-toplevel)" >/dev/null 2>&1; then
+    echo "**Error**: \`pushd\` command failed; errno: $?"
+    return 2
+fi
+
+if [[ -e Cargo.toml ]] ; then
+
+    echo "## Clean project directories"
+    echo
+    echo "\`\`\`bash"
+    .cargo-checked clean
+    echo "\`\`\`"
+    echo
+
+    echo "## Check formatting"
+    echo
+    echo "\`\`\`bash"
+    .cargo-checked fmt -- --check
+    echo "\`\`\`"
+    echo
+
+    echo "## Check style"
+    echo
+
+    echo "### Using 'check'"
+    echo
+    echo "\`\`\`bash"
+    .cargo-checked check
+    echo "\`\`\`"
+    echo
+
+    echo "### Using 'clippy'"
+    echo
+    echo "\`\`\`bash"
+    .cargo-checked clippy
+    echo "\`\`\`"
+    echo
+
+    echo "## Running all tests"
+    echo
+    echo "\`\`\`bash"
+    .cargo-checked fmt -- --check
+    echo "\`\`\`"
+    echo
+
+    echo "## Generating documentation"
+    echo
+    echo "\`\`\`bash"
+    .cargo-checked doc --all-features --no-deps
+    echo "\`\`\`"
+    echo
+
+    echo "## Publishing to crates.io"
+    echo
+
+    VER=$(grep "^version = " Cargo.toml | grep -Eo "[0-9\.]+(\-[a-zA-Z0-9\-_]+)?")
+
+    echo "Attempting to publish version $VER."
+    echo
+
+    if [[ -e README.md ]] ; then
+        if ! grep -q "\*\*$VER\*\*" README.md; then
+            echo "**Error**: version not listed in 'README.md'"
+            return 4
+        fi
+    fi
+
+    echo "\`\`\`bash"
+    .cargo-checked publish
+    echo "\`\`\`"
+    echo
+
+    git tag -a "v$VER" -m "$1"
+    git push --tags --no-verify
+else
+    echo "**Error**: no 'Cargo.toml' file; are you in the right place?"
+    return 5
+fi
+
+if ! popd >/dev/null 2>&1; then
+    echo "**Error**: \`popd\` failed; errno: $?"
+    return 2
+fi
+
+return 0

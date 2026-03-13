@@ -37,7 +37,7 @@ cargo_plugin_init() {
 
     @zplugins_envvar_save cargo CARGO_HOME
 
-    export CARGO_HOME="${CARGO_HOME:-${HOME}/.cargo}"
+    typeset -g CARGO_HOME="${CARGO_HOME:-${HOME}/.cargo}"
 
     @zplugins_add_to_path cargo "${CARGO_HOME}/bin"
 }
